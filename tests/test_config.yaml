@@ -1,0 +1,40 @@
+# 测试用数据库配置
+
+databases:
+  # SQLite 测试数据库
+  sqlite_test:
+    type: sqlite
+    path: ./tests/test_data.db
+
+  # PostgreSQL 配置（可选，取消注释并填写实际信息）
+  # postgres_test:
+  #   type: postgresql
+  #   host: localhost
+  #   port: 5432
+  #   user: postgres
+  #   password: your_password
+  #   database: test_db
+
+  # MySQL 配置（可选，取消注释并填写实际信息）
+  # mysql_test:
+  #   type: mysql
+  #   host: localhost
+  #   port: 3306
+  #   user: root
+  #   password: your_password
+  #   database: test_db
+  #   # 可选: 使用连接字符串格式
+  #   # host: 127.0.0.1
+  #   # port: 3306
+  #   # charset: utf8mb4
+
+  # Oracle 配置（可选，取消注释并填写实际信息）
+  # oracle_test:
+  #   type: oracle
+  #   host: localhost
+  #   port: 1521
+  #   user: system
+  #   password: your_password
+  #   database: XE  # SID 或服务名 (例如: XE, ORCL, FREEPDB1)
+  #   # 可选: 使用 TNS 连接字符串
+  #   # dsn: "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XEPDB1)))"

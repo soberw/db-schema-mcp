@@ -1,0 +1,47 @@
+# db-schema-mcp 配置示例
+# 将此文件复制到您想要的位置，并配置您的数据库连接
+
+databases:
+  # SQLite 配置
+  sqlite_local:
+    type: sqlite
+    path: /path/to/your/database.db
+    # 或使用相对路径: ./data/database.db
+
+  # PostgreSQL 配置
+  postgres_production:
+    type: postgresql
+    host: localhost
+    port: 5432
+    user: postgres
+    password: your_password
+    database: production_db
+    # 可选: SSL 配置
+    # sslmode: require  # disable, allow, prefer, require, verify-ca, verify-full
+    # sslrootcert: /path/to/ca.pem
+
+  # MySQL 配置
+  mysql_analytics:
+    type: mysql
+    host: localhost
+    port: 3306
+    user: your_username
+    password: your_password
+    database: analytics_db
+    # 可选: SSL 配置
+    # ssl: true
+    # ssl_ca: /path/to/ca.pem
+    # ssl_cert: /path/to/cert.pem
+    # ssl_key: /path/to/key.pem
+    # charset: utf8mb4
+
+  # Oracle 配置
+  oracle_erp:
+    type: oracle
+    host: localhost
+    port: 1521
+    user: system
+    password: your_password
+    database: ORCL  # SID 或服务名
+    # 可选: 使用 TNS 连接字符串代替 host/port/database
+    # dsn: "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=hostname)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=orcl)))"

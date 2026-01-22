@@ -16,9 +16,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v1
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -26,8 +23,8 @@ jobs:
 
       - name: Build package
         run: |
-          uv pip install build
-          uv run python -m build
+          python -m pip install build
+          python -m build
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

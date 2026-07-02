@@ -14,6 +14,7 @@ from db_schema_mcp.config import (
     DatabaseConfig,
     ForeignKeyInfo,
     IndexInfo,
+    QueryResult,
     TableDescription,
 )
 from db_schema_mcp.connections.base import DatabaseConnection
@@ -157,7 +158,7 @@ class OracleConnection(DatabaseConnection):
         # 检查表是否在连接释放后进行，避免连接池死锁
         if not table_exists:
             available = await self.list_tables()
-            msg = f"Table '{table_name}' not found. Available tables: {', '.join(available)}"
+            msg = f"表 '{table_name}' 未找到。可用表: {', '.join(available)}"
             raise ValueError(msg)
 
         # Get column information
@@ -286,6 +287,39 @@ class OracleConnection(DatabaseConnection):
             primary_keys=primary_keys,
             foreign_keys=foreign_keys,
             indexes=indexes,
+        )
+
+    async def execute_query(
+        self,
+        sql: str,
+        parameters: list[Any] | dict[str, Any] | None,
+        limit: int,
+    ) -> QueryResult:
+        """Execute a validated read-only Oracle query."""
+        if not self._is_connected or not self._pool:
+            msg = "Not connected to database"
+            raise ConnectionError(msg)
+
+        with self._pool.acquire() as conn:
+            cursor = conn.cursor()
+            cursor.execute(sql, parameters or [])
+            if cursor.description is None:
+                msg = "查询未返回结果集。请仅执行 SELECT/WITH 查询。"
+                raise ValueError(msg)
+
+            columns = [col[0].lower() for col in cursor.description]
+            fetched_rows = cursor.fetchmany(limit + 1)
+            truncated = len(fetched_rows) > limit
+            rows = [
+                dict(zip(columns, row, strict=True))
+                for row in fetched_rows[:limit]
+            ]
+
+        return QueryResult(
+            columns=columns,
+            rows=rows,
+            row_count=len(rows),
+            truncated=truncated,
         )
 
     async def get_connection_info(self) -> ConnectionInfo:

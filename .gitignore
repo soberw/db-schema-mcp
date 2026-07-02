@@ -55,6 +55,7 @@ dmypy.json
 *~
 .DS_Store
 .claude
+tasks
 
 # Environment variables
 .env

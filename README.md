@@ -15,6 +15,9 @@
 
 ```bash
 uvx db-schema-mcp --config /path/to/your/db_config.yaml
+
+# 如果还没有配置文件，也可以先启动后通过 init 工具生成示例配置
+uvx db-schema-mcp
 ```
 
 ### 使用 pip
@@ -81,7 +84,21 @@ databases:
 
 ## 可用工具
 
-### list-connections
+### init
+
+生成示例 YAML 配置文件。适用于首次使用、还没有配置文件的场景。
+
+**参数:**
+- `path` (可选): 配置文件输出路径。未提供时优先使用启动命令中的 `--config` 路径
+- `overwrite` (可选): 是否覆盖已有文件，默认 `false`
+
+**示例:**
+```
+您: 请初始化 db-schema-mcp 配置文件，存到 ./db_schema_mcp.yaml
+AI: 已生成示例配置文件: ./db_schema_mcp.yaml
+```
+
+### list_connections
 
 列出所有已配置的数据库连接。
 
@@ -97,7 +114,7 @@ AI: 以下是您配置的连接：
 3. sqlite_local - SQLite @ /path/to/database.db
 ```
 
-### list-tables
+### list_tables
 
 列出指定数据库中的所有表。
 
@@ -115,7 +132,7 @@ AI: postgres_analytics 中的表如下：
 - order_items（订单明细）
 ```
 
-### describe-table
+### describe_table
 
 获取指定表的详细结构信息。
 
@@ -137,12 +154,36 @@ AI: customers 表有以下结构：
 | status | VARCHAR(50) | YES | 'active' | 客户状态 |
 ```
 
+### exec_query
+
+执行只读 SQL 查询并返回结果。此工具只允许单条 `SELECT` 或 `WITH` 查询，会拒绝 `INSERT`、`UPDATE`、`DELETE`、DDL、多语句、`SELECT INTO`、`FOR UPDATE` 等非只读或可能产生副作用的 SQL。
+
+**参数:**
+- `connection_name` (必需): 数据库连接名称
+- `sql` (必需): 只读 SQL 查询
+- `parameters` (可选): 参数绑定值，数组或对象。请使用它传入动态值，避免拼接 SQL。占位符写法遵循对应数据库驱动（例如 SQLite `?`、MySQL/PostgreSQL `%s`、Oracle `:name` 或 `:1`）
+- `limit` (可选): 最大返回行数，默认 100，最大 1000
+- `response_format` (可选): `markdown` 或 `json`，默认 `markdown`
+
+**示例:**
+```
+您: 查询订单金额超过 1000 的客户，最多 20 条
+AI 调用:
+exec_query({
+  "connection_name": "mysql_production",
+  "sql": "SELECT customer_id, total FROM orders WHERE total > %s ORDER BY total DESC",
+  "parameters": [1000],
+  "limit": 20
+})
+```
+
 ## 安全性
 
 - 所有数据库操作在本地执行
 - 没有数据传输到外部服务
 - 数据库凭证存储在本地配置文件中
-- 仅访问元数据（表结构），不访问实际数据
+- 表结构工具仅访问元数据
+- `exec_query` 仅允许只读查询，并支持参数绑定以避免 SQL 拼接
 
 ## 开发
 
@@ -153,8 +194,8 @@ AI: customers 表有以下结构：
 git clone https://github.com/soberw/db-schema-mcp.git
 cd db-schema-mcp
 
-# 以可编辑模式安装
-uv pip install -e ".[dev]"
+# 安装开发依赖
+uv sync --extra dev
 ```
 
 ### 运行测试
@@ -165,16 +206,16 @@ uv pip install -e ".[dev]"
 
 ```bash
 # 运行所有测试
-pytest
+uv run --extra dev pytest
 
 # 运行测试并显示覆盖率
-pytest --cov=db_schema_mcp --cov-report=html
+uv run --extra dev pytest --cov=db_schema_mcp --cov-report=html
 
 # 运行特定测试文件
-pytest tests/test_config.py
+uv run --extra dev pytest tests/test_config.py
 
 # 运行测试并显示详细输出
-pytest -v
+uv run --extra dev pytest -v
 ```
 
 #### 2. 集成测试
@@ -188,19 +229,19 @@ cp config.example.yaml tests/test_config.yaml
 # 2. 编辑 tests/test_config.yaml，配置数据库连接
 
 # 3. 创建测试数据库和表
-python run_tests.py setup
+uv run python run_tests.py setup
 
 # 4. 列出所有数据库连接
-python run_tests.py list
+uv run python run_tests.py list
 
 # 5. 列出指定数据库的表
-python run_tests.py tables <连接名>
+uv run python run_tests.py tables <连接名>
 
 # 6. 查看表结构
-python run_tests.py desc <连接名> <表名>
+uv run python run_tests.py desc <连接名> <表名>
 
 # 7. 进入交互模式
-python run_tests.py interactive
+uv run python run_tests.py interactive
 ```
 
 交互模式可用命令：
@@ -214,13 +255,13 @@ python run_tests.py interactive
 
 ```bash
 # 运行类型检查
-mypy src/
+uv run --extra dev mypy src/
 
 # 格式化代码
-ruff check src/ --fix
+uv run --extra dev ruff check src/ --fix
 
 # 仅检查不修改
-ruff check src/
+uv run --extra dev ruff check src/
 ```
 
 ### 数据库支持
@@ -266,5 +307,5 @@ pip install --upgrade db-schema-mcp
 
 或用于开发：
 ```bash
-uv pip install -e ".[dev]"
+uv sync --extra dev
 ```

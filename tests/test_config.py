@@ -1,12 +1,11 @@
 """配置管理的测试。"""
 
-import tempfile
 from pathlib import Path
 
 import pytest
 import yaml
 
-from db_schema_mcp.config import ConfigManager, DatabaseConfig
+from db_schema_mcp.config import ConfigManager
 
 
 class TestConfigManager:
@@ -46,6 +45,14 @@ class TestConfigManager:
         """测试配置文件不存在时的错误。"""
         with pytest.raises(FileNotFoundError, match="配置文件未找到"):
             ConfigManager(str(tmp_path / "nonexistent.yaml"))
+
+    def test_allow_missing_config(self, tmp_path: Path) -> None:
+        """测试允许缺失配置文件时以空配置启动。"""
+        config_path = tmp_path / "nonexistent.yaml"
+        manager = ConfigManager(str(config_path), allow_missing=True)
+
+        assert manager.config_path == config_path.resolve()
+        assert manager.list_connections() == []
 
     def test_missing_databases_key(self, tmp_path: Path) -> None:
         """测试缺少 'databases' 键时的错误。"""

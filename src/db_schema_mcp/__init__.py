@@ -5,8 +5,7 @@ db-schema-mcp: 用于数据库表结构操作的 Model Context Protocol 服务�
 查询表结构的 MCP 工具。
 """
 
-__version__ = "0.1.0"
-
+from db_schema_mcp._version import __version__
 from db_schema_mcp.config import ConfigManager, DatabaseConfig
 from db_schema_mcp.mcp_server import MCPServer
 

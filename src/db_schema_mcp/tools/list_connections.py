@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from db_schema_mcp.config import ConfigManager, ConnectionInfo
+from db_schema_mcp.config import ConfigManager
 from db_schema_mcp.connections import ConnectionFactory
 
 
@@ -91,7 +91,7 @@ def format_connections_list(connections: list[dict[str, Any]]) -> str:
         if conn.get("error"):
             lines.append(f"   - 错误: {conn['error']}")
         elif conn["status"] == "disconnected":
-            lines.append(f"   - 状态: 未检查")
+            lines.append("   - 状态: 未检查")
         else:
             lines.append(f"   - 状态: {conn['status']}")
         lines.append("")

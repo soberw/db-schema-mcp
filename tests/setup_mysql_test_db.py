@@ -145,15 +145,15 @@ async def create_mysql_database(
         print("✅ 已插入订单测试数据")
 
         print("\n" + "=" * 60)
-        print(f"🎉 MySQL 测试数据库创建完成!")
+        print("🎉 MySQL 测试数据库创建完成!")
         print("=" * 60)
         print(f"📊 数据库: {database}")
         print(f"📍 主机: {host}:{port}")
-        print(f"\n包含以下表:")
-        print(f"   - users (用户表)")
-        print(f"   - orders (订单表)")
-        print(f"   - products (产品表)")
-        print(f"   - order_items (订单项表)")
+        print("\n包含以下表:")
+        print("   - users (用户表)")
+        print("   - orders (订单表)")
+        print("   - products (产品表)")
+        print("   - order_items (订单项表)")
 
     finally:
         await cursor.close()

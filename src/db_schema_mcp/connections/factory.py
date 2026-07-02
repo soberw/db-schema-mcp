@@ -3,7 +3,6 @@
 本模块提供根据配置类型创建数据库连接实例的工厂。
 """
 
-from typing import Any
 
 from db_schema_mcp.config import DatabaseConfig
 from db_schema_mcp.connections.base import DatabaseConnection

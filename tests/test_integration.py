@@ -1,7 +1,6 @@
 """db-schema-mcp 的集成测试。"""
 
 import sqlite3
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -9,7 +8,9 @@ import yaml
 
 from db_schema_mcp.config import ConfigManager
 from db_schema_mcp.tools.describe_table import handle_describe_table
-from db_schema_mcp.tools.list_connections import handle_list_connections, format_connections_list
+from db_schema_mcp.tools.exec_query import handle_exec_query
+from db_schema_mcp.tools.init_config import handle_init_config
+from db_schema_mcp.tools.list_connections import format_connections_list, handle_list_connections
 from db_schema_mcp.tools.list_tables import handle_list_tables
 
 
@@ -39,6 +40,14 @@ class TestIntegration:
                 FOREIGN KEY (product_id) REFERENCES products(id)
             )
         """)
+        cursor.execute(
+            "INSERT INTO products (name, price) VALUES (?, ?)",
+            ("Keyboard", 299.99),
+        )
+        cursor.execute(
+            "INSERT INTO products (name, price) VALUES (?, ?)",
+            ("Mouse", 99.5),
+        )
 
         conn.commit()
         conn.close()
@@ -119,3 +128,54 @@ class TestIntegration:
 
         assert "test_db" in formatted
         assert "sqlite" in formatted
+
+    @pytest.mark.asyncio
+    async def test_init_config_generates_yaml(self, tmp_path: Path) -> None:
+        """测试 init 工具生成示例配置。"""
+        config_path = tmp_path / "db_schema_mcp.yaml"
+        manager = ConfigManager(str(config_path), allow_missing=True)
+
+        result = await handle_init_config(manager)
+
+        assert config_path.exists()
+        assert "已生成示例配置文件" in result
+        assert "databases:" in config_path.read_text(encoding="utf-8")
+
+    @pytest.mark.asyncio
+    async def test_init_config_does_not_overwrite(self, tmp_path: Path) -> None:
+        """测试 init 默认不覆盖已有文件。"""
+        config_path = tmp_path / "db_schema_mcp.yaml"
+        config_path.write_text("existing: true\n", encoding="utf-8")
+        manager = ConfigManager(None, allow_missing=True)
+
+        result = await handle_init_config(manager, path=str(config_path))
+
+        assert "配置文件已存在" in result
+        assert config_path.read_text(encoding="utf-8") == "existing: true\n"
+
+    @pytest.mark.asyncio
+    async def test_exec_query(self, config_file: str) -> None:
+        """测试 exec_query 执行只读参数化查询。"""
+        manager = ConfigManager(config_file)
+        result = await handle_exec_query(
+            manager,
+            connection_name="test_db",
+            sql="SELECT name, price FROM products WHERE price > ? ORDER BY price",
+            parameters=[100],
+            limit=10,
+        )
+
+        assert "Keyboard" in result
+        assert "Mouse" not in result
+
+    @pytest.mark.asyncio
+    async def test_exec_query_rejects_non_query(self, config_file: str) -> None:
+        """测试 exec_query 拒绝修改语句。"""
+        manager = ConfigManager(config_file)
+
+        with pytest.raises(ValueError, match="只允许"):
+            await handle_exec_query(
+                manager,
+                connection_name="test_db",
+                sql="DELETE FROM products",
+            )

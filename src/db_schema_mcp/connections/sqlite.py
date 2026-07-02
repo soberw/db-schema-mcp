@@ -15,6 +15,7 @@ from db_schema_mcp.config import (
     DatabaseConfig,
     ForeignKeyInfo,
     IndexInfo,
+    QueryResult,
     TableDescription,
 )
 from db_schema_mcp.connections.base import DatabaseConnection
@@ -117,7 +118,7 @@ class SQLiteConnection(DatabaseConnection):
         )
         if not cursor.fetchone():
             available = await self.list_tables()
-            msg = f"Table '{table_name}' not found. Available tables: {', '.join(available)}"
+            msg = f"表 '{table_name}' 未找到。可用表: {', '.join(available)}"
             raise ValueError(msg)
 
         # Get column information using PRAGMA
@@ -226,6 +227,37 @@ class SQLiteConnection(DatabaseConnection):
             primary_keys=primary_keys,
             foreign_keys=foreign_keys,
             indexes=indexes,
+        )
+
+    async def execute_query(
+        self,
+        sql: str,
+        parameters: list[Any] | dict[str, Any] | None,
+        limit: int,
+    ) -> QueryResult:
+        """Execute a validated read-only SQLite query."""
+        if not self._is_connected:
+            msg = "Not connected to database"
+            raise ConnectionError(msg)
+
+        cursor = self._connection.execute(sql, parameters or ())
+        if cursor.description is None:
+            msg = "查询未返回结果集。请仅执行 SELECT/WITH 查询。"
+            raise ValueError(msg)
+
+        columns = [col[0] for col in cursor.description]
+        fetched_rows = cursor.fetchmany(limit + 1)
+        truncated = len(fetched_rows) > limit
+        rows = [
+            {column: row[column] for column in columns}
+            for row in fetched_rows[:limit]
+        ]
+
+        return QueryResult(
+            columns=columns,
+            rows=rows,
+            row_count=len(rows),
+            truncated=truncated,
         )
 
     async def get_connection_info(self) -> ConnectionInfo:

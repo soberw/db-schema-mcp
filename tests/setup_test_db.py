@@ -110,11 +110,11 @@ def create_test_database(db_path: str = "./tests/test_data.db") -> None:
     conn.close()
 
     print(f"✅ 测试数据库已创建: {db_file.absolute()}")
-    print(f"📊 包含以下表:")
-    print(f"   - users (用户表)")
-    print(f"   - orders (订单表)")
-    print(f"   - products (产品表)")
-    print(f"   - order_items (订单项表)")
+    print("📊 包含以下表:")
+    print("   - users (用户表)")
+    print("   - orders (订单表)")
+    print("   - products (产品表)")
+    print("   - order_items (订单项表)")
 
 
 if __name__ == "__main__":

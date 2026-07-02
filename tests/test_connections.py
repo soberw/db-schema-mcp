@@ -1,7 +1,6 @@
 """数据库连接实现的测试。"""
 
 import sqlite3
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -39,6 +38,14 @@ class TestSQLiteConnection:
         """)
 
         cursor.execute("CREATE INDEX idx_customers_email ON customers(email)")
+        cursor.execute(
+            "INSERT INTO customers (name, email) VALUES (?, ?)",
+            ("Alice", "alice@example.com"),
+        )
+        cursor.execute(
+            "INSERT INTO customers (name, email) VALUES (?, ?)",
+            ("Bob", "bob@example.com"),
+        )
 
         conn.commit()
         conn.close()
@@ -141,3 +148,38 @@ class TestSQLiteConnection:
         assert "客户" in desc.columns[1].comment or "姓名" in desc.columns[1].comment
         assert desc.columns[2].comment is not None  # email 列有注释
         assert "邮箱" in desc.columns[2].comment or "email" in desc.columns[2].comment.lower()
+
+    @pytest.mark.asyncio
+    async def test_execute_query(self, sqlite_config: DatabaseConfig) -> None:
+        """测试执行只读查询。"""
+        conn = SQLiteConnection(sqlite_config)
+        await conn.connect()
+        result = await conn.execute_query(
+            "SELECT name, email FROM customers WHERE name = ?",
+            ["Alice"],
+            limit=10,
+        )
+        await conn.disconnect()
+
+        assert result.columns == ["name", "email"]
+        assert result.row_count == 1
+        assert result.rows[0]["name"] == "Alice"
+        assert result.truncated is False
+
+    @pytest.mark.asyncio
+    async def test_execute_query_truncates_by_limit(
+        self,
+        sqlite_config: DatabaseConfig,
+    ) -> None:
+        """测试查询结果按 limit 截断。"""
+        conn = SQLiteConnection(sqlite_config)
+        await conn.connect()
+        result = await conn.execute_query(
+            "SELECT name FROM customers ORDER BY name",
+            None,
+            limit=1,
+        )
+        await conn.disconnect()
+
+        assert result.row_count == 1
+        assert result.truncated is True

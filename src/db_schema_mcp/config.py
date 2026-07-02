@@ -7,8 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import yaml
-
+import yaml  # type: ignore[import-untyped]
 
 # ============================================================================
 # 数据库配置模型
@@ -144,6 +143,23 @@ class TableDescription:
     comment: str | None = None
 
 
+@dataclass
+class QueryResult:
+    """只读 SQL 查询结果。
+
+    Attributes:
+        columns: 返回列名列表。
+        rows: 查询结果行，每行按列名索引。
+        row_count: 本次返回的行数。
+        truncated: 是否因 limit 限制截断了结果。
+    """
+
+    columns: list[str]
+    rows: list[dict[str, Any]]
+    row_count: int
+    truncated: bool = False
+
+
 # ============================================================================
 # 配置管理器
 # ============================================================================
@@ -167,25 +183,31 @@ class ConfigManager:
         "oracle": {"type", "host", "user", "password", "database"},
     }
 
-    def __init__(self, config_path: str) -> None:
+    def __init__(self, config_path: str | None, allow_missing: bool = False) -> None:
         """初始化配置管理器。
 
         Args:
             config_path: YAML 配置文件的路径。
+            allow_missing: 为 True 时允许配置文件缺失，并以空连接列表启动。
 
         Raises:
             FileNotFoundError: 如果配置文件不存在。
             ValueError: 如果 YAML 格式无效或缺少必填字段。
         """
-        self._config_path = Path(config_path).expanduser().resolve()
+        self._config_path = Path(config_path).expanduser().resolve() if config_path else None
+        self._connections: dict[str, DatabaseConfig] = {}
+
+        if self._config_path is None:
+            return
 
         if not self._config_path.exists():
+            if allow_missing:
+                return
             raise FileNotFoundError(
                 f"配置文件未找到: {self._config_path}\n"
                 f"请检查路径后重试。"
             )
 
-        self._connections: dict[str, DatabaseConfig] = {}
         self._load_config()
 
     def _load_config(self) -> None:
@@ -194,6 +216,9 @@ class ConfigManager:
         Raises:
             ValueError: 如果 YAML 格式无效或缺少必填字段。
         """
+        if self._config_path is None:
+            return
+
         try:
             with open(self._config_path, encoding="utf-8") as f:
                 data = yaml.safe_load(f)
@@ -205,21 +230,21 @@ class ConfigManager:
 
         if not isinstance(data, dict):
             raise ValueError(
-                f"配置文件根级别必须包含字典。\n"
-                f"期望格式: databases:\n  connection_name:\n    type: ...\n"
+                "配置文件根级别必须包含字典。\n"
+                "期望格式: databases:\n  connection_name:\n    type: ...\n"
             )
 
         databases = data.get("databases")
         if not isinstance(databases, dict):
             raise ValueError(
-                f"配置文件中缺少 'databases' 键。\n"
-                f"请确保配置包含 'databases:' 部分。"
+                "配置文件中缺少 'databases' 键。\n"
+                "请确保配置包含 'databases:' 部分。"
             )
 
         if not databases:
             raise ValueError(
-                f"'databases' 部分未定义数据库连接。\n"
-                f"请至少添加一个数据库连接。"
+                "'databases' 部分未定义数据库连接。\n"
+                "请至少添加一个数据库连接。"
             )
 
         for name, db_config in databases.items():
@@ -250,7 +275,7 @@ class ConfigManager:
 
         if db_type not in self._REQUIRED_FIELDS:
             raise ValueError(
-                f"连接 '{name}' 的数据库类型 '{db_type}' 不支持。\n"
+                f"不支持的数据库类型: 连接 '{name}' 使用 '{db_type}'。\n"
                 f"支持的类型: {', '.join(self._REQUIRED_FIELDS.keys())}"
             )
 
@@ -303,3 +328,8 @@ class ConfigManager:
             连接名称列表。
         """
         return list(self._connections.keys())
+
+    @property
+    def config_path(self) -> Path | None:
+        """获取当前配置文件路径。"""
+        return self._config_path

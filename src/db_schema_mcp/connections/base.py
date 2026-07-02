@@ -6,7 +6,7 @@
 import abc
 from typing import Any
 
-from db_schema_mcp.config import ConnectionInfo, TableDescription
+from db_schema_mcp.config import ConnectionInfo, QueryResult, TableDescription
 
 
 class DatabaseConnection(abc.ABC):
@@ -79,6 +79,28 @@ class DatabaseConnection(abc.ABC):
         Raises:
             ConnectionError: 如果未连接。
             ValueError: 如果表不存在。
+        """
+
+    @abc.abstractmethod
+    async def execute_query(
+        self,
+        sql: str,
+        parameters: list[Any] | dict[str, Any] | None,
+        limit: int,
+    ) -> QueryResult:
+        """执行只读 SQL 查询。
+
+        Args:
+            sql: 已通过工具层只读校验的 SQL 语句。
+            parameters: 用于参数化查询的绑定参数。
+            limit: 最大返回行数。
+
+        Returns:
+            查询结果。
+
+        Raises:
+            ConnectionError: 如果未连接。
+            ValueError: 如果查询未返回结果集。
         """
 
     @abc.abstractmethod

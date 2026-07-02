@@ -166,11 +166,11 @@ async def create_oracle_tables(
         tables = [row[0] for row in cursor.fetchall()]
 
         print("\n" + "=" * 60)
-        print(f"🎉 Oracle 测试表创建完成!")
+        print("🎉 Oracle 测试表创建完成!")
         print("=" * 60)
         print(f"📊 数据库: {db_name}")
         print(f"📍 主机: {host}:{port}")
-        print(f"\n已创建以下表:")
+        print("\n已创建以下表:")
         for table in tables:
             cursor.execute(f"SELECT COUNT(*) FROM {table}")
             count = cursor.fetchone()[0]

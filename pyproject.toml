@@ -25,6 +25,7 @@ dependencies = [
     "psycopg[binary]>=3.2.0",
     "aiomysql>=0.2.0",
     "oracledb>=2.0.0",
+    "pyoceanbase==1.1.0",
 ]
 
 [project.optional-dependencies]

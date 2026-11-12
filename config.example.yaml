@@ -2,6 +2,17 @@
 # 将此文件复制到您想要的位置，并配置您的数据库连接
 
 databases:
+  # OceanBase Oracle 兼容模式（安装包已包含纯 Python 驱动）
+  oceanbase_oracle:
+    type: oceanbase
+    host: localhost
+    port: 2881  # 直连默认 2881；ODP/OBProxy 常用 2883，按实际端口填写
+    user: "app_user@oracle_tenant"
+    password: your_password
+    database: APP_USER  # Oracle schema；普通名称自动转为大写
+    # mode: oracle  # 默认值，可省略；当前仅支持 Oracle 模式
+    # 通过 ODP 连接时可用 user: "app_user@oracle_tenant#cluster_name"
+
   # SQLite 配置
   sqlite_local:
     type: sqlite

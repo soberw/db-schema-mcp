@@ -7,6 +7,7 @@
 from db_schema_mcp.config import DatabaseConfig
 from db_schema_mcp.connections.base import DatabaseConnection
 from db_schema_mcp.connections.mysql import MySQLConnection
+from db_schema_mcp.connections.oceanbase import OceanBaseOracleConnection
 from db_schema_mcp.connections.oracle import OracleConnection
 from db_schema_mcp.connections.postgres import PostgresConnection
 from db_schema_mcp.connections.sqlite import SQLiteConnection
@@ -22,6 +23,7 @@ class ConnectionFactory:
     - postgresql
     - mysql
     - oracle
+    - oceanbase (Oracle 兼容模式)
     """
 
     _drivers: dict[str, type[DatabaseConnection]] = {
@@ -29,6 +31,7 @@ class ConnectionFactory:
         "postgresql": PostgresConnection,
         "mysql": MySQLConnection,
         "oracle": OracleConnection,
+        "oceanbase": OceanBaseOracleConnection,
     }
 
     @classmethod

@@ -8,6 +8,14 @@ SAMPLE_CONFIG = """# db-schema-mcp 配置示例
 # 请保留需要的连接并删除不使用的示例项。
 
 databases:
+  oceanbase_oracle:
+    type: oceanbase
+    host: localhost
+    port: 2881  # ODP/OBProxy 按实际端口填写，通常是 2883
+    user: "app_user@oracle_tenant"
+    password: your_password
+    database: APP_USER  # Oracle schema；mode 默认 oracle，可省略
+
   sqlite_local:
     type: sqlite
     path: /path/to/your/database.db

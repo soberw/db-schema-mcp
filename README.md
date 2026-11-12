@@ -4,7 +4,7 @@
 
 ## 功能特性
 
-- **多数据库支持**: SQLite、PostgreSQL、MySQL、Oracle
+- **多数据库支持**: SQLite、PostgreSQL、MySQL、Oracle、OceanBase Oracle 兼容模式
 - **本地执行**: 所有数据库操作在本地运行，数据绝不上传
 - **MCP 协议兼容**: 可无缝集成到任何支持 MCP 的 AI 客户端
 - **灵活配置**: 通过 YAML 配置文件管理多个数据库连接
@@ -63,6 +63,49 @@ databases:
     type: sqlite
     path: /path/to/your/database.db
 ```
+
+### OceanBase Oracle 模式
+
+安装包自带纯 Python 的 `pyoceanbase` 驱动，无需 OBCI、Oracle Instant Client 或 Java。
+
+```yaml
+databases:
+  ob_oracle:
+    type: oceanbase
+    host: 127.0.0.1
+    port: 2881
+    user: "app_user@oracle_tenant"
+    password: your_password
+    database: APP_USER
+```
+
+`mode` 默认为 `oracle`，当前只支持 Oracle 兼容租户。`database` 是目标 schema，
+普通名称自动转成大写；带双引号的名称保留大小写，例如 `database: '"MixedSchema"'`。
+表结构工具读取该 schema 下当前账号可见的表（`ALL_*` 视图），保留返回标识符大小写。
+
+直连端口默认 `2881`；ODP/OBProxy 常用 `2883`，云服务以实际连接信息为准。
+用户名原样传递，ODP 可使用 `user@tenant#cluster`。可选 `ssl` 字典直接采用
+驱动的 TLS 配置（如 `ca`、`cert`、`key`）。
+
+查询使用 Oracle SQL，绑定占位符使用驱动的 `%s` 或 `%(name)s`，不使用 `:1`/`:name`：
+
+```json
+{"connection_name": "ob_oracle", "sql": "SELECT * FROM ORDERS WHERE ID = %s", "parameters": [123]}
+```
+
+绑定值支持字符串、数字和 null；值由驱动绑定，Oracle 字符串使用单引号加倍转义。
+查询在数据库只读事务中运行，禁用本地文件导入和多语句能力，并拦截 `NEXTVAL`。
+请使用专用最小权限账号，不授予写入、DDL、执行有副作用函数或外部资源访问权限。
+返回最多 1000 行、结果预算 4 MiB；单个结果包超过 4 MiB 时拒绝接收并提示缩小字段。
+连接超时 10 秒，网络查询总时限和服务端语句超时 30 秒；取消或到期时中断连接。
+结果总预算超限时标记截断。驱动收包逻辑已锁定 `pyoceanbase==1.1.0`，升级需回归验证。
+
+`pyoceanbase` 是社区驱动；其上游声明验证过 OceanBase 4.2.1.11，项目的真实租户
+集成验证需提供测试连接后执行，不能据此承诺所有 OceanBase 版本。
+
+真实租户只读冒烟测试：设置 `OCEANBASE_HOST`、`OCEANBASE_PORT`、`OCEANBASE_USER`、
+`OCEANBASE_PASSWORD`、`OCEANBASE_DATABASE` 后运行
+`uv run --extra dev pytest tests/test_oceanbase.py -q`。未提供配置时跳过真库测试。
 
 ### MCP 客户端配置
 
@@ -272,6 +315,7 @@ uv run --extra dev ruff check src/
 | PostgreSQL | psycopg3 | ✅ 完全支持 |
 | MySQL | aiomysql | ✅ 完全支持 |
 | Oracle | oracledb | ✅ 支持 |
+| OceanBase Oracle 模式 | pyoceanbase（纯 Python） | 已适配；真实租户兼容性需按部署版本验证 |
 
 ## 许可证
 

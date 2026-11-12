@@ -20,7 +20,7 @@ class DatabaseConfig:
 
     Attributes:
         name: 用于引用此配置的连接名称。
-        type: 数据库类型 (sqlite, postgresql, mysql, oracle)。
+        type: 数据库类型 (sqlite, postgresql, mysql, oracle, oceanbase)。
         host: 数据库主机地址 (SQLite 为 None)。
         port: 数据库端口号 (SQLite 为 None)。
         user: 数据库用户名 (SQLite 为 None)。
@@ -29,6 +29,7 @@ class DatabaseConfig:
         path: SQLite 数据库文件路径 (仅 SQLite 使用)。
         ssl: SSL/TLS 配置字典。
         sslmode: PostgreSQL 的 SSL 模式 (disable, allow, prefer, require, verify-ca, verify-full)。
+        mode: OceanBase 兼容模式，当前只支持 oracle，可省略。
     """
 
     name: str
@@ -41,6 +42,7 @@ class DatabaseConfig:
     path: str | None = None
     ssl: dict[str, Any] | None = None
     sslmode: str | None = None
+    mode: str = "oracle"
 
 
 @dataclass
@@ -181,6 +183,7 @@ class ConfigManager:
         "postgresql": {"type", "host", "user", "password", "database"},
         "mysql": {"type", "host", "user", "password", "database"},
         "oracle": {"type", "host", "user", "password", "database"},
+        "oceanbase": {"type", "host", "user", "password", "database"},
     }
 
     def __init__(self, config_path: str | None, allow_missing: bool = False) -> None:
@@ -289,6 +292,10 @@ class ConfigManager:
             )
 
         # 创建 DatabaseConfig
+        mode = config.get("mode", "oracle")
+        if db_type == "oceanbase" and mode != "oracle":
+            raise ValueError("OceanBase 当前只支持 mode: oracle（可省略）。")
+
         self._connections[name] = DatabaseConfig(
             name=name,
             type=db_type,
@@ -300,6 +307,7 @@ class ConfigManager:
             path=config.get("path"),
             ssl=config.get("ssl"),
             sslmode=config.get("sslmode"),
+            mode=mode,
         )
 
     def get_connection(self, name: str) -> DatabaseConfig | None:

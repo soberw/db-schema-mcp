@@ -1,5 +1,34 @@
 # 变动说明
 
+## 1.2.1 - 2026-11-13
+
+### 修复
+
+- 将发布依赖从 `mcp>=0.9.0` 修正为 `mcp>=1.25.0,<2`，防止新安装解析到不兼容的 MCP SDK v2。
+- 修复 SDK 2.3.0 下启动出现 `'Server' object has no attribute 'call_tool'` 的问题；继续使用已经验证的 SDK v1 接口。
+- SDK 约束写入 wheel 元数据，用户安装无需依赖开发环境的 `uv.lock`。
+
+### 回归保护
+
+- 新增真实 stdio 子进程测试，覆盖 initialize、五个工具发现、无配置初始化以及 SQLite 表结构和参数查询。
+- CI 在 Python 3.12/3.13 上从 wheel 安装，分别验证 MCP SDK 1.25.0 和最新允许的 v1 版本。
+- 发布工作流上传 PyPI 前验证 wheel 依赖元数据和 stdio 握手，失败时中止上传。
+
+### 验证
+
+- 已复现 SDK 2.3.0 启动失败，并验证 SDK 1.25.0 和 1.30.0 下 wheel 安装与回归通过。
+- 本地测试 64 项通过，1 项需要真实数据库配置的测试跳过；ruff、mypy 和构建通过。
+
+### 升级
+
+```bash
+uvx --refresh db-schema-mcp@1.2.1 --config /path/to/db_config.yaml
+# 已使用 uv tool 安装时：
+uv tool upgrade db-schema-mcp
+```
+
+升级本地安装后需要重新启动 MCP 连接，正在运行的旧进程不会自动切换 SDK。
+
 ## 1.2.0 - 2026-11-13
 
 ### 新增

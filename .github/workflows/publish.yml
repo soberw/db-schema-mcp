@@ -26,5 +26,10 @@ jobs:
           python -m pip install build
           python -m build
 
+      - name: Verify wheel metadata and MCP stdio startup
+        run: |
+          python -m pip install dist/*.whl pytest pytest-asyncio
+          python -m pytest tests/test_mcp_stdio.py -q
+
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

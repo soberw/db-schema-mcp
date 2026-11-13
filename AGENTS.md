@@ -6,6 +6,8 @@
   `oceanbase.py` 使用纯 Python pyoceanbase 连接 OceanBase Oracle 租户。
 - `src/db_schema_mcp/tools/` 包含 init、连接/表结构工具和只读 exec_query。
 - `tests/test_oceanbase.py` 验证适配器；真实租户测试显式通过环境变量启用。
+- `tests/test_mcp_stdio.py` 从已安装包启动真实 stdio 子进程，验证 SDK 握手和工具调用。
+- SDK 依赖限制为已验证的 v1 系列；CI 从 wheel 安装验证最低和最新允许版本。
 - 新数据库应同步 README、config.example.yaml 和 init_config.py 的模板。
 - `CHANGELOG.md` 记录版本变动和验证边界；发布版本与 `pyproject.toml` 保持一致。
 - `tasks/` 为独立 Git 账本，禁止混入业务仓库提交。

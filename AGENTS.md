@@ -7,6 +7,7 @@
 - `src/db_schema_mcp/tools/` 包含 init、连接/表结构工具和只读 exec_query。
 - `tests/test_oceanbase.py` 验证适配器；真实租户测试显式通过环境变量启用。
 - 新数据库应同步 README、config.example.yaml 和 init_config.py 的模板。
+- `CHANGELOG.md` 记录版本变动和验证边界；发布版本与 `pyproject.toml` 保持一致。
 - `tasks/` 为独立 Git 账本，禁止混入业务仓库提交。
 - 验证使用 `uv run --extra dev pytest tests/ -q`、
   `uv run --extra dev ruff check src tests` 和 `uv run --extra dev mypy src/`。

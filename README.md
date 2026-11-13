@@ -100,8 +100,10 @@ databases:
 连接超时 10 秒，网络查询总时限和服务端语句超时 30 秒；取消或到期时中断连接。
 结果总预算超限时标记截断。驱动收包逻辑已锁定 `pyoceanbase==1.1.0`，升级需回归验证。
 
-`pyoceanbase` 是社区驱动；其上游声明验证过 OceanBase 4.2.1.11，项目的真实租户
-集成验证需提供测试连接后执行，不能据此承诺所有 OceanBase 版本。
+`pyoceanbase` 是社区驱动；其上游声明验证过 OceanBase 4.2.1.11。
+本项目已在真实 Oracle 兼容租户通过 ODP 完成只读验证：登录、schema 识别、
+219 张表的列表、代表性表结构、含特殊字符的参数绑定和结果截断。
+本次未核实数据库具体版本，不能据此承诺所有 OceanBase 版本、直连或 TLS 部署。
 
 真实租户只读冒烟测试：设置 `OCEANBASE_HOST`、`OCEANBASE_PORT`、`OCEANBASE_USER`、
 `OCEANBASE_PASSWORD`、`OCEANBASE_DATABASE` 后运行
@@ -315,7 +317,7 @@ uv run --extra dev ruff check src/
 | PostgreSQL | psycopg3 | ✅ 完全支持 |
 | MySQL | aiomysql | ✅ 完全支持 |
 | Oracle | oracledb | ✅ 支持 |
-| OceanBase Oracle 模式 | pyoceanbase（纯 Python） | 已适配；真实租户兼容性需按部署版本验证 |
+| OceanBase Oracle 模式 | pyoceanbase（纯 Python） | 已通过真实 ODP 租户只读验证 |
 
 ## 许可证
 
